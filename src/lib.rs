@@ -5,6 +5,7 @@ pub mod git;
 pub mod herdr_cli;
 pub mod hostenv;
 pub mod ipc;
+pub mod jj_view;
 pub mod keymap;
 pub mod layout;
 pub mod list;

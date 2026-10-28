@@ -50,6 +50,11 @@ struct ViewState {
     origin_tab: Option<String>,
 }
 
+#[derive(Serialize, Deserialize)]
+struct JjViewState {
+    pane_id: String,
+}
+
 /// Written just before evacuating panes to a parking tab, so an interrupted
 /// open can move them back on the next toggle instead of stranding them.
 #[derive(Serialize, Deserialize)]
@@ -103,6 +108,51 @@ pub fn toggle_tab() -> Result<()> {
         }
         None => open_tab_view(&repo),
     }
+}
+
+/// Toggle a compact, single-pane Jujutsu log/stat view in the current tab.
+pub fn toggle_jj() -> Result<()> {
+    let repo = crate::jj_view::resolve_repo()?;
+    let ctx = view_context()?;
+    let path = jj_state_path(&repo, &ctx.tab);
+    if let Some(state) = read_jj_state(&path) {
+        if pane_alive(&state.pane_id) {
+            let _ = herdr_json(&["pane", "close", &state.pane_id]);
+            let _ = std::fs::remove_file(&path);
+            return Ok(());
+        }
+        let _ = std::fs::remove_file(&path);
+    }
+
+    let socket = path.with_extension("sock");
+    let repo_env = repo.display().to_string();
+    let state_env = path.display().to_string();
+    let pane = open_pane(
+        &repo,
+        &socket,
+        "jj",
+        &[
+            "--placement",
+            "split",
+            "--direction",
+            "right",
+            "--target-pane",
+            &ctx.focused_pane,
+            "--focus",
+        ],
+        &[
+            ("JJVIEW_REPO", &repo_env),
+            ("JJVIEW_STATE_PATH", &state_env),
+        ],
+    )?;
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    std::fs::write(
+        path,
+        serde_json::to_vec_pretty(&JjViewState { pane_id: pane })?,
+    )?;
+    Ok(())
 }
 
 pub fn open() -> Result<()> {
@@ -593,6 +643,16 @@ fn tab_socket_path(repo: &Path) -> PathBuf {
 
 fn sidebar_socket_path(repo: &Path, tab_id: &str) -> PathBuf {
     views_dir().join(format!("{}.{}.sock", repo_hash(repo), tab_key(tab_id)))
+}
+
+fn jj_state_path(repo: &Path, tab_id: &str) -> PathBuf {
+    state_dir()
+        .join("jj-views")
+        .join(format!("{}.{}.json", repo_hash(repo), tab_key(tab_id)))
+}
+
+fn read_jj_state(path: &Path) -> Option<JjViewState> {
+    serde_json::from_slice(&std::fs::read(path).ok()?).ok()
 }
 
 fn recover_path(repo: &Path, tab_id: &str) -> PathBuf {
