@@ -36,6 +36,8 @@ https://github.com/user-attachments/assets/793f2e82-17cc-484f-b7e1-75a32e6ee9de
   files and per-commit diffs. `w` filters it to just the commits your branch
   added on top of its base (and opening the log from branch scope starts
   there).
+- **Jujutsu glance view (prototype)** - toggle a read-only pane between
+  `jj log` and `jj diff --stat`; it refreshes on file changes, with a periodic fallback.
 - **Knows what your branch was cut from** - branch scope diffs against the
   branch you actually branched off, so a branch stacked on another feature
   branch shows only its own work instead of both.
@@ -97,6 +99,19 @@ description = "git view tab"
 `toggle` opens a sidebar in the tab you're in (each tab can have its own);
 press again in that tab to close. `toggle-tab` opens one dedicated tab per
 repo and jumps to it if it's already open.
+
+For the read-only Jujutsu view, bind another key:
+
+```toml
+[[keys.command]]
+key = "cmd+shift+k"
+type = "plugin_action"
+command = "chmarax.gitview.toggle-jj"
+description = "jj log / diff stats"
+```
+
+Press `Tab` or `d` in the pane for `jj diff --stat`, `l` for `jj log`, and
+`q` to close the pane. It refreshes the visible command on file changes, with a periodic fallback.
 
 **To update**, reinstall - your config survives:
 

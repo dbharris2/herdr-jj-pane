@@ -18,6 +18,12 @@ placement = "split"
 command = ["sh", "-c", "exec sh \"$HERDR_PLUGIN_ROOT/herdr/run.sh\" list"]
 
 [[panes]]
+id = "jj"
+title = "jj: log / diff stat"
+placement = "split"
+command = ["sh", "-c", "exec sh \"$HERDR_PLUGIN_ROOT/herdr/run.sh\" jj"]
+
+[[panes]]
 id = "ask"
 title = "gitview: confirm"
 placement = "overlay"
@@ -40,6 +46,12 @@ id = "toggle-tab"
 title = "gitview: toggle in own tab"
 contexts = ["pane", "workspace"]
 command = ["sh", "-c", "exec sh \"$HERDR_PLUGIN_ROOT/herdr/run.sh\" toggle-tab"]
+
+[[actions]]
+id = "toggle-jj"
+title = "jj: toggle log / diff stat"
+contexts = ["pane", "workspace"]
+command = ["sh", "-c", "exec sh \"$HERDR_PLUGIN_ROOT/herdr/run.sh\" toggle-jj"]
 
 [[build]]
 command = ["bash", "herdr/install.sh"]
